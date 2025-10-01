@@ -54,6 +54,46 @@ contract FundMeTest is Test {
     function testUpdatesFundedDataStructure() public {
         fundMe.fund{value: 0.1 ether}();
         uint256 amountFunded = fundMe.getAddressToAmountFunded(address(this));
+        address funderAddress = fundMe.getFunders(0);
         assertEq(amountFunded, 0.1 ether);
+        vm.assertEq(funderAddress, address(this));
+    }
+
+    function testOnlyOwnerCanWithdraw() public {
+        fundMe.fund{value: 0.1 ether}();
+        vm.expectRevert();
+        fundMe.withdraw();
+    }
+
+    function testOnwerCanWithdraw() public {
+        fundMe.fund{value: 0.1 ether}();
+        uint256 startingOwnerBalance = msg.sender.balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+        vm.prank(msg.sender);
+        fundMe.withdraw();
+        uint256 endingOwnerBalance = msg.sender.balance;
+        uint256 endingFundMeBalance = address(fundMe).balance;
+        vm.assertEq(endingFundMeBalance, 0);
+        vm.assertEq(startingOwnerBalance + startingFundMeBalance, endingOwnerBalance);
+    }
+
+    function testMultipleSenders() public {
+        uint256 numberOfSenders = 10;
+        for (uint160 i = 1; i <= numberOfSenders; i++) {
+            hoax(address(i), 10 ether);
+            fundMe.fund{value: 0.1 ether}();
+        }
+
+        uint256 startingBalanceOfFundMe = address(fundMe).balance;
+        uint256 startingBalanceOfOwner = msg.sender.balance;
+
+        vm.prank(msg.sender);
+        fundMe.withdraw();
+
+        uint256 endingBalanceOfFundMe = address(fundMe).balance;
+        uint256 endingBalanceOfOwner = msg.sender.balance;
+
+        vm.assertEq(endingBalanceOfFundMe, 0);
+        vm.assertEq(startingBalanceOfFundMe + startingBalanceOfOwner, endingBalanceOfOwner);
     }
 }

@@ -50,13 +50,11 @@ contract FundMe {
         require(callSuccess, "Call failed");
     }
 
-    function getAddressToAmountFunded(
-        address funderAddress
-    ) external view returns(uint256) {
+    function getAddressToAmountFunded(address funderAddress) external view returns (uint256) {
         return s_addressToAmountFunded[funderAddress];
     }
 
-    function getFunders(uint256 index) external view returns(address) {
+    function getFunders(uint256 index) external view returns (address) {
         return s_funders[index];
     }
 

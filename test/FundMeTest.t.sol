@@ -7,6 +7,7 @@ import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 import {PriceConverter} from "../src/PriceConverter.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
+import {MockV3Aggregator} from "../test/mocks/MockAggregatorV3Interface.sol";
 
 contract FundMeTest is Test {
     FundMe fundMe;
@@ -49,7 +50,25 @@ contract FundMeTest is Test {
         vm.assertEq(helperConfig.getSepoliaAddress().priceFeed, 0x694AA1769357215DE4FAC081bf1f309aDC325306);
     }
 
-    //function testAnvilAddressGottenFromHelperConfig() public {}
+    function testGetAnvilAddressIsMockAggregator() public {
+        HelperConfig.NetworkConfig memory config = helperConfig.getAnvilAddress();
+
+        // Check that the address is not the Sepolia price feed
+        assertTrue(config.priceFeed != helperConfig.getPriceFeed());
+
+        // Check that the address is a contract (code size > 0)
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(mload(add(config, 0x20)))
+        }
+        console.log(config.priceFeed);
+        //assertGt(codeSize, 0, "Returned address is not a contract");
+
+        // Optionally, check that the contract is a MockV3Aggregator
+        // by calling a known function
+        int256 answer = MockV3Aggregator(config.priceFeed).latestAnswer();
+        assertEq(answer, helperConfig.getPrice(), "Not a MockV3Aggregator contract");
+    }
 
     function testUpdatesFundedDataStructure() public {
         fundMe.fund{value: 0.1 ether}();

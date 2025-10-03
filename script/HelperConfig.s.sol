@@ -39,4 +39,12 @@ contract HelperConfig is Script {
         NetworkConfig memory anvilAddress = NetworkConfig(address(mockV3Aggregator));
         return anvilAddress;
     }
+
+    function getPriceFeed() public pure returns(address){
+        return PRICE_FEED_ADDRESS;
+    }
+
+    function getPrice() public pure returns(int256) {
+        return PRICE;
+    }
 }
